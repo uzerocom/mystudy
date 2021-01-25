@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=yes">
+<title>uzero's study space</title>
+</head>
+<script>
+function do_generation() {
+	var arr1 = document.getElementsByName("game1");
+	var arr2 = document.getElementsByName("game2");
+	var arr3 = document.getElementsByName("game3");
+	
+	var arrArg1 = new Array();
+	var arrArg2 = new Array();
+	var arrArg3 = new Array();
+	
+	for(var i=0; i<arr1.length; i++) {
+		if (arr1[i].value) arrArg1.push(arr1[i].value);
+	}
+	for(var i=0; i<arr2.length; i++) {
+		if (arr2[i].value) arrArg2.push(arr2[i].value);
+	}
+	for(var i=0; i<arr3.length; i++) {
+		if (arr3[i].value) arrArg3.push(arr3[i].value);
+	}
+	
+	var obj = document.getElementById("output-area");
+	obj.innerHTML = "";
+	
+	for(var i=0; i<arrArg1.length; i++) {
+		for(var j=0; j<arrArg2.length; j++) {
+			for(var k=0; k<arrArg3.length; k++) {
+				var num = (i*(arrArg2.length * arrArg3.length)) + (j*(arrArg3.length)) + (k+1);
+				obj.innerHTML += num + ". " + arrArg1[i] + arrArg2[j] + arrArg3[k] + "<br/>";
+			}
+		}
+	}
+	
+}
+</script>
+<body>
+<div class="input-area">
+	<table>
+		<tr>
+			<td>1.</td>
+			<td>
+				<select name="game1">
+					<option value="승">승</option>
+					<option value="무">무</option>
+					<option value="패">패</option>
+				</select>
+			</td>
+			<td>
+				<select name="game1">
+					<option value="">선택안함</option>
+					<option value="승">승</option>
+					<option value="무">무</option>
+					<option value="패">패</option>
+				</select>
+			</td>
+			<td>
+				<select name="game1">
+					<option value="">선택안함</option>
+					<option value="승">승</option>
+					<option value="무">무</option>
+					<option value="패">패</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td>2.</td>
+			<td>
+				<select name="game2">
+					<option value="승">승</option>
+					<option value="무">무</option>
+					<option value="패">패</option>
+				</select>
+			</td>
+			<td>
+				<select name="game2">
+					<option value="">선택안함</option>
+					<option value="승">승</option>
+					<option value="무">무</option>
+					<option value="패">패</option>
+				</select>
+			</td>
+			<td>
+				<select name="game2">
+					<option value="">선택안함</option>
+					<option value="승">승</option>
+					<option value="무">무</option>
+					<option value="패">패</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td>3.</td>
+			<td>
+				<select name="game3">
+					<option value="승">승</option>
+					<option value="무">무</option>
+					<option value="패">패</option>
+				</select>
+			</td>
+			<td>
+				<select name="game3">
+					<option value="">선택안함</option>
+					<option value="승">승</option>
+					<option value="무">무</option>
+					<option value="패">패</option>
+				</select>
+			</td>
+			<td>
+				<select name="game3">
+					<option value="">선택안함</option>
+					<option value="승">승</option>
+					<option value="무">무</option>
+					<option value="패">패</option>
+				</select>
+			</td>
+		</tr>
+		<td>
+			<td>
+				<input type="button" value="생성" onclick="do_generation()"/>
+			</td>
+		</td>
+	</table>
+</div>
+결과 :
+<div id="output-area">
+
+</div>
+</body>
+</html>
