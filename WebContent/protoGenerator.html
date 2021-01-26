@@ -5,7 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=yes">
 <title>uzero's study space</title>
 </head>
+<style>
+select {width: 76px}
+</style>
+<script src="./js/jquery-1.11.3.min.js"></script>
 <script>
+function get_random_value(min, max) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * ((max+1) - min)) + min;
+}
+function do_random() {
+	$(".first").each(function() {
+		var r = get_random_value(0, 2);
+		$("option", $(this)).eq(r).prop("selected", "selected");
+		$("option", $(this)).eq(r).trigger("change");
+	});
+}
 function do_generation() {
 	var arr1 = document.getElementsByName("game1");
 	var arr2 = document.getElementsByName("game2");
@@ -32,12 +48,26 @@ function do_generation() {
 		for(var j=0; j<arrArg2.length; j++) {
 			for(var k=0; k<arrArg3.length; k++) {
 				var num = (i*(arrArg2.length * arrArg3.length)) + (j*(arrArg3.length)) + (k+1);
-				obj.innerHTML += num + ". " + arrArg1[i] + arrArg2[j] + arrArg3[k] + "<br/>";
+				obj.innerHTML += "<div><label><input type='checkbox' class='ch_box' />" + arrArg1[i] + arrArg2[j] + arrArg3[k] + "</label></div>";
 			}
 		}
 	}
 	
 }
+function change_option(val, game, option) {
+	var obj = document.getElementsByName("game" + game);
+	$(obj).each(function(i) {
+		if (i >= option) {
+			$(this).val("");
+			$("option[data-opt="+ option +"]", $(this)).attr("disabled", false);
+			$("option[value="+ val +"]", $(this)).attr("disabled", "disabled");
+			$("option[value="+ val +"]", $(this)).attr("data-opt", option);
+		}
+	});
+}
+$(function() {
+	$(".first").trigger("change");
+});
 </script>
 <body>
 <div class="input-area">
@@ -45,14 +75,14 @@ function do_generation() {
 		<tr>
 			<td>1.</td>
 			<td>
-				<select name="game1">
+				<select class="first" name="game1" onchange="change_option(this.value, 1, 1)">
 					<option value="승">승</option>
 					<option value="무">무</option>
 					<option value="패">패</option>
 				</select>
 			</td>
 			<td>
-				<select name="game1">
+				<select name="game1" onchange="change_option(this.value, 1, 2)">
 					<option value="">선택안함</option>
 					<option value="승">승</option>
 					<option value="무">무</option>
@@ -71,14 +101,14 @@ function do_generation() {
 		<tr>
 			<td>2.</td>
 			<td>
-				<select name="game2">
+				<select class="first" name="game2" onchange="change_option(this.value, 2, 1)">
 					<option value="승">승</option>
 					<option value="무">무</option>
 					<option value="패">패</option>
 				</select>
 			</td>
 			<td>
-				<select name="game2">
+				<select name="game2" onchange="change_option(this.value, 2, 2)">
 					<option value="">선택안함</option>
 					<option value="승">승</option>
 					<option value="무">무</option>
@@ -97,14 +127,14 @@ function do_generation() {
 		<tr>
 			<td>3.</td>
 			<td>
-				<select name="game3">
+				<select class="first" name="game3" onchange="change_option(this.value, 3, 1)">
 					<option value="승">승</option>
 					<option value="무">무</option>
 					<option value="패">패</option>
 				</select>
 			</td>
 			<td>
-				<select name="game3">
+				<select name="game3" onchange="change_option(this.value, 3, 2)">
 					<option value="">선택안함</option>
 					<option value="승">승</option>
 					<option value="무">무</option>
@@ -121,8 +151,9 @@ function do_generation() {
 			</td>
 		</tr>
 		<td>
-			<td>
+			<td colspan="3">
 				<input type="button" value="생성" onclick="do_generation()"/>
+				<input type="button" value="랜덤" onclick="do_random()"/>
 			</td>
 		</td>
 	</table>
