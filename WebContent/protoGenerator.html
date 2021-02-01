@@ -7,6 +7,11 @@
 </head>
 <style>
 select {width: 76px}
+.default-input {width: 100px;}
+.result-input {width: 200px;}
+.weight-input {width: 30px;text-align: center;}
+.txt-default {font-size: 11px;}
+.txt-focus {color: red}
 </style>
 <script src="./js/jquery-1.11.3.min.js"></script>
 <script>
@@ -65,11 +70,325 @@ function change_option(val, game, option) {
 		}
 	});
 }
+function get_data_arrange() {
+	var rep = $(".data-arrange").val();
+	rep = rep.replace(/[^승|^무|^패]/gi, "");
+	$(".data-arrange").val(rep);
+}
+function show_display(_input, _prefix) {
+	return "<div class='txt-default'>" + _prefix + " - 승: " + _input[0] + "%, " + "무: " + _input[1] + "%, " + "패: " + _input[2] + "% </div>";
+}
+function do_analyze(idx) {
+	var innerHtml = "";
+	// 등수
+	var home_level = 7;
+	var away_level = 10;
+	
+	var hometeam_whole_result = $("input[name=hometeam_whole_result]").eq(idx).val(); // 홈팀의 전체 경기결과
+	var awayteam_whole_result = $("input[name=awayteam_whole_result]").eq(idx).val(); // 어웨이팀의 전체 경기결과
+	var hometeam_home_result  = $("input[name=hometeam_home_result]").eq(idx).val();  // 홈팀의 홈 경기결과
+	var awayteam_away_result  = $("input[name=awayteam_away_result]").eq(idx).val();  // 어웨이팀의 어웨이 경기결과
+	var hometeam_past_result  = $("input[name=hometeam_past_result]").eq(idx).val();  // 상대전적 경기 결과
+	
+	var weights = new Array();
+	var percentage = new Array();
+	$(".weight-input").each(function() {
+		weights.push( parseInt(this.value) / 10 );
+	}); 
+	
+	console.log(weights);
+	
+	percentage.push( get_percentage(hometeam_whole_result, false) );
+	percentage.push( get_percentage(awayteam_whole_result, true) );
+	percentage.push( get_percentage(hometeam_home_result, false) );
+	percentage.push( get_percentage(awayteam_away_result, true) );
+	percentage.push( get_percentage(hometeam_past_result, false) );
+	
+	innerHtml += show_display(get_percentage(hometeam_whole_result, false), "홈팀의 전체 승률");
+	innerHtml += show_display(get_percentage(hometeam_home_result, false), "홈팀의 홈 승률");
+	innerHtml += show_display(get_percentage(awayteam_whole_result, false), "어웨이팀의 전체 승률");
+	innerHtml += show_display(get_percentage(awayteam_away_result, false), "어웨이팀의 어웨이 승률");
+	innerHtml += show_display(get_percentage(hometeam_past_result, false), "상대전적 홈팀 승률");
+	
+	var dw = 0, dd = 0, dl = 0, dt = 0,ww = 0, wd = 0, wl = 0, wt = 0;
+	for (var i=0; i<percentage.length; i++) {
+	 	var d = percentage[i];
+		dw += d[0];
+		dd += d[1];
+		dl += d[2];
+		ww += Math.round(d[0] * weights[i]);
+		wd += Math.round(d[1] * weights[i]);
+		wl += Math.round(d[2] * weights[i]);
+	}
+
+	dt = dw + dd + dl;
+	wt = ww + wd + wl;
+	
+	console.log(dt);
+	
+	console.log(dw / dt * 100);
+	console.log(dd / dt * 100);
+	console.log(dl / dt * 100);
+	
+	console.log(ww);
+	console.log(wd);
+	console.log(wl);
+	console.log(wt);
+	
+	var wcls = "", dcls = "", lcls = "";
+	if (ww > wd && ww > wl) wcls = "txt-focus";
+	else if (wd > ww && wd > wl) dcls = "txt-focus"; 
+	else if (wl > ww && wl > wd) lcls = "txt-focus"; 
+	
+	innerHtml += "<div class=''>홈팀 확률 - <span class='" + wcls + "'>승: " + ww + "%</span>, <span class='" + dcls + "'>무: " + wd + "%</span>, <span class='" + lcls + "'>패: " + wl + "%</span></div>";
+	
+	innerHtml += "홈 확률에 의한 무작위 : " + gamble(ww, wd, wl) ;
+	
+	$(".show-result").eq(idx).html(innerHtml);
+}
+function get_percentage(_input, _is_away) {
+	var leng = _input.length;
+	var win = 0, draw = 0, lose = 0;
+	for (var i=0; i<leng; i++) {
+		var s = _input.substring(i, i+1);
+		if ("승" == s) {
+			if (_is_away) lose++;
+			else win++;
+		} else if ("무" == s) {
+			draw++;
+		} else if ("패" == s) {
+			if (_is_away) win++;
+			else lose++;
+		} 
+	}
+	var percents = [Math.round(win / leng * 100), Math.round(draw / leng * 100), Math.round(lose / leng * 100)];
+	
+	return percents;
+}
+function gamble(win, draw, lose) {
+	var result = 0;
+    var r  = Math.random() / 1; // {0.0 - 1.0}
+    var dr = r * 100; // {0.0 - 100.0}
+	
+    var text = [ "승", "무", "패" ]; 
+    var point = [ lose, draw, win ]; // 2, 1, 0
+    
+    console.log(point);
+    
+    var cumulative = 0;
+
+    for(var i=0; i<point.length; i++) {
+        cumulative += point[i];
+        if(dr <= cumulative) {
+        	result = (point.length-1) - i;
+        	break;
+        }
+    }
+	return text[result];
+}
 $(function() {
+	$(".btn-copy").on("click", function() {
+		$(this).siblings(".result-input").val($(".data-arrange").val());
+	});
+	var $focused;
+	$(".btn-append").on("click", function() {
+		if ($focused) {
+			var bf = "";
+			if ($(this).val() == "승") {
+				bf = $focused.val() + "승";
+				$focused.val(bf);
+			} else if ($(this).val() == "무") {
+				bf = $focused.val() + "무";
+				$focused.val(bf);
+			} else if ($(this).val() == "패") {
+				bf = $focused.val() + "패";
+				$focused.val(bf);
+			}
+		}
+	});
+	
+	$("input[type=text],textarea").on("focus", function() {
+		console.log(this);
+		$focused = $(this);
+	});
+	
 	$(".first").trigger("change");
 });
 </script>
 <body>
+<div class="analyze-area">
+	<div>
+		<div>
+			<textarea class="data-arrange" style="width: 500px;height: 100px;"></textarea>
+		</div>
+		<input type="button" class="btn-arrange" value="추리기" onclick="get_data_arrange()" />
+		<input type="button" class="btn-arrange" value="지우기" onclick="$('.data-arrange').val('')" />
+		&nbsp;&nbsp;
+		<input type="button" class="btn-append" value="승" />&nbsp;&nbsp;
+		<input type="button" class="btn-append" value="무" />&nbsp;&nbsp;
+		<input type="button" class="btn-append" value="패"  />&nbsp;&nbsp;
+	</div>
+	<table border="1">
+		<tr>
+			<th>팀</th>
+			<th>항목(가중치)</th>
+			<th>내용</th>
+			<th>분석</th>
+		</tr>
+		<tr>
+			<th rowspan="6">
+				<input type="text" class="default-input" name="hometeam_name" />
+				<br/>vs.<br/>
+				<input type="text" class="default-input" name="awayteam_name" />
+			</th>
+			<th>홈팀의 전체 경기결과 <input type="text" class="weight-input" value="2" /></th>
+			<td>
+				<input type="text" class="result-input" name="hometeam_whole_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+			<td rowspan="6"><input type="button" class="btn-result" value="분석" onclick="do_analyze(0)"/></td>
+		</tr>
+		<tr>
+			<th>어웨이팀의 전체 경기결과 <input type="text" class="weight-input" value="2" /></th>
+			<td>
+				<input type="text" class="result-input" name="awayteam_whole_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>홈팀의 홈 경기결과 <input type="text" class="weight-input" value="3" /></th>
+			<td>
+				<input type="text" class="result-input" name="hometeam_home_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>어웨이팀의 어웨이 경기결과 <input type="text" class="weight-input" value="1" /></th>
+			<td>
+				<input type="text" class="result-input" name="awayteam_away_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>상대전적 홈팀 경기결과 <input type="text" class="weight-input" value="2" /></th>
+			<td>
+				<input type="text" class="result-input" name="hometeam_past_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>결과</th>
+			<td class="show-result">
+			</td>
+		</tr>
+		
+		<tr>
+			<th>팀</th>
+			<th>항목(가중치)</th>
+			<th>내용</th>
+			<th>분석</th>
+		</tr>
+		<tr>
+			<th rowspan="6">
+				<input type="text" class="default-input" name="hometeam_name" />
+				<br/>vs.<br/>
+				<input type="text" class="default-input" name="awayteam_name" />
+			</th>
+			<th>홈팀의 전체 경기결과 <input type="text" class="weight-input" value="2" /></th>
+			<td>
+				<input type="text" class="result-input" name="hometeam_whole_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+			<td rowspan="6"><input type="button" class="btn-result" value="분석" onclick="do_analyze(1)"/></td>
+		</tr>
+		<tr>
+			<th>어웨이팀의 전체 경기결과 <input type="text" class="weight-input" value="2" /></th>
+			<td>
+				<input type="text" class="result-input" name="awayteam_whole_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>홈팀의 홈 경기결과 <input type="text" class="weight-input" value="3" /></th>
+			<td>
+				<input type="text" class="result-input" name="hometeam_home_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>어웨이팀의 어웨이 경기결과 <input type="text" class="weight-input" value="1" /></th>
+			<td>
+				<input type="text" class="result-input" name="awayteam_away_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>상대전적 홈팀 경기결과 <input type="text" class="weight-input" value="2" /></th>
+			<td>
+				<input type="text" class="result-input" name="hometeam_past_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>결과</th>
+			<td class="show-result">
+			</td>
+		</tr>
+		
+		<tr>
+			<th>팀</th>
+			<th>항목(가중치)</th>
+			<th>내용</th>
+			<th>분석</th>
+		</tr>
+		<tr>
+			<th rowspan="6">
+				<input type="text" class="default-input" name="hometeam_name" />
+				<br/>vs.<br/>
+				<input type="text" class="default-input" name="awayteam_name" />
+			</th>
+			<th>홈팀의 전체 경기결과 <input type="text" class="weight-input" value="2" /></th>
+			<td>
+				<input type="text" class="result-input" name="hometeam_whole_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+			<td rowspan="6"><input type="button" class="btn-result" value="분석" onclick="do_analyze(2)"/></td>
+		</tr>
+		<tr>
+			<th>어웨이팀의 전체 경기결과 <input type="text" class="weight-input" value="2" /></th>
+			<td>
+				<input type="text" class="result-input" name="awayteam_whole_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>홈팀의 홈 경기결과 <input type="text" class="weight-input" value="3" /></th>
+			<td>
+				<input type="text" class="result-input" name="hometeam_home_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>어웨이팀의 어웨이 경기결과 <input type="text" class="weight-input" value="1" /></th>
+			<td>
+				<input type="text" class="result-input" name="awayteam_away_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>상대전적 홈팀 경기결과 <input type="text" class="weight-input" value="2" /></th>
+			<td>
+				<input type="text" class="result-input" name="hometeam_past_result" value=""/>
+				<input type="button" class="btn-copy" value="↓" />
+			</td>
+		</tr>
+		<tr>
+			<th>결과</th>
+			<td class="show-result">
+			</td>
+		</tr>
+	</table>
+</div>
 <div class="input-area">
 	<table>
 		<tr>
